@@ -28,4 +28,4 @@
 
 <h2>Saída do script</h2>
 
-<img src="https://github.com/bcXcb/bak/issues/1#issue-1691644826" alt="Saída de um programa na linha de comandos">
+![output](https://user-images.githubusercontent.com/94535032/235560007-041854b8-8a76-45f2-bcbb-a54b4d5ffa8f.png)
