@@ -27,3 +27,5 @@
 </p>
 
 <h2>Saída do script</h2>
+
+<img src="https://github.com/bcXcb/bak/issues/1#issue-1691644826" alt="Saída de um programa na linha de comandos">
