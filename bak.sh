@@ -8,7 +8,7 @@ backup_file=backup-`date +"%a"`.zip
 items=()
 empty_items=()
 non_empty_items=()
-input=/home/gabriel/files/projetos/bash/bak/input.txt
+input=/home/gabriel/files/projetos/github/bak/input.txt
 i=0
 j=0
 
