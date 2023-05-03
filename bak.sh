@@ -1,35 +1,30 @@
 #!/usr/bin/env bash
+# Backup in USB flash drives
 
-temp_dir=/home/gabriel/$RANDOM
-mountage_point=/media/gabriel
-device=/dev/sdb1
-destiny=$mountage_point/backup
-backup_file=backup-`date +"%a"`.zip
-items=()
-empty_items=()
-non_empty_items=()
-input=/home/gabriel/files/projetos/github/bak/input.txt
-i=0
-j=0
+declare -r TEMP_DIR=/home/gabriel/$((RANDOM % 256)) # 0 to 255
+declare -r MOUNTAGE_POINT=/media/gabriel
+declare -r DEVICE=/dev/sdb1
+declare -r DESTINY=$MOUNTAGE_POINT/backup
+declare -r INPUT=/home/gabriel/files/projetos/github/bak/input.txt
+declare -r BACKUP_FILE=backup-`date +"%a"`.zip
 
-for item in `cat $input`; do
+declare -a items
+declare -a empty_items
+declare -a non_empty_items
+
+declare -i i=0
+declare -i j=0
+
+for item in `cat $INPUT`; do
 	items[$((i++))]=$item
 done
 
 i=0
 for item in ${items[*]}; do
 	if [ -d $item ]; then
-		if [ `ls $item | wc -l` -eq 0 ]; then
-			empty_items[$i]=$item
-		else
-			non_empty_items[$j]=$item
-		fi
+		[[ `ls $item | wc -l` -eq 0 ]] && empty_items[$i]=$item || non_empty_items[$j]=$item
 	else
-        if [ -s $item ]; then
-            non_empty_items[$j]=$item
-        else
-            empty_items[$i]=$item
-        fi
+        [[ -s $item ]] && non_empty_items[$j]=$item || empty_items[$i]=$item
 	fi
 	let i++ j++
 done
@@ -44,21 +39,21 @@ echo -en "\n"
 
 echo "Starting backup..."
 
-mount $device $mountage_point
+mount $DEVICE $MOUNTAGE_POINT
 echo "The USB flash drive was mounted."
 
-mkdir -p $temp_dir
-echo "Was created the temporary directory \"$temp_dir\"."
+mkdir -p $TEMP_DIR
+echo "Was created the temporary directory \"$TEMP_DIR\"."
 
-if [ ! -d $destiny ]; then
-    mkdir -p $destiny
-    echo "Was created the directory \"$destiny\"."
+if [ ! -d $DESTINY ]; then
+    mkdir -p $DESTINY
+    echo "Was created the directory \"$DESTINY\"."
 fi
 
 if [ -n "$non_empty_items" ]; then
 	echo "The following items was copied:"
 	for item in ${non_empty_items[*]}; do
-		cp -r $item $temp_dir
+		cp -rp $item $TEMP_DIR
 		echo "+ $item."
 	done
 fi
@@ -71,15 +66,15 @@ if [ -z "$empty_items" ]; then
 fi
 
 echo "Compressing items..."
-zip -rq9 $backup_file $temp_dir
+zip -rq9 $BACKUP_FILE $TEMP_DIR
 echo "The items was compressed."
-mv $backup_file $destiny
+mv $BACKUP_FILE $DESTINY
 echo "The compressed file was moved to the destiny."
 
 echo "Umounting USB flash drive..."
-umount $device
+umount $DEVICE
 echo "The USB flash drive was umounted."
 
-rm -r $temp_dir
+rm -r $TEMP_DIR
 echo "The temporary directory was removed."
 echo "Finished."
