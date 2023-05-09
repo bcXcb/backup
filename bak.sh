@@ -11,7 +11,9 @@ declare -a non_empty_items
 
 parameters() {
     case $1 in
-        '') : ;;
+        '')
+			:
+			:;;
         '--version')
             version
             exit 0;;
@@ -78,8 +80,6 @@ backup() {
         done
     fi
 }
-
-clear
 
 parameters $1
 
