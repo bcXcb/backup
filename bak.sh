@@ -9,6 +9,26 @@ declare -r BACKUP_FILE=backup-`date +"%a"`.zip
 declare -a empty_items
 declare -a non_empty_items
 
+parameters() {
+    case $1 in
+        '') : ;;
+        '--version')
+            version
+            exit 0;;
+        *)
+            echo 'Invalid parameter!'
+            exit 1
+    esac
+}
+
+version() {
+    echo 'bak 1.0'
+    echo 'GPLv3+ License: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>'
+    echo 'This is free software: you are free to change and redistribute it.'
+    echo 'THERE IS NO WARRANTY, TO THE MAXIMUM EXTENT PERMITTED BY LAW.'
+    echo ''
+    echo 'Written by Gabriel Cavalcante de J. Oliveira.'
+}
 
 fill_arrays() {
     declare -i local i
@@ -60,6 +80,8 @@ backup() {
 }
 
 clear
+
+parameters $1
 
 fill_arrays
 
