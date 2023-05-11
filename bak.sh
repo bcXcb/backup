@@ -10,7 +10,7 @@ declare -r DESTINY=$MOUNTAGE_POINT/backup
 declare -r BACKUP_FILE=backup-`date +"%a"`.zip
 declare -a empty_items
 declare -a non_empty_items
-declare -i is_mount_point
+declare -i exit_status
 
 parameters() {
     case $1 in
@@ -25,7 +25,7 @@ parameters() {
 }
 
 version() {
-    echo 'bak 1.0'
+    echo 'bak v1.0'
     echo 'GPLv3+ License: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>'
     echo 'This is free software: you are free to change and redistribute it.'
     echo 'THERE IS NO WARRANTY, TO THE MAXIMUM EXTENT PERMITTED BY LAW.'
@@ -34,26 +34,23 @@ version() {
 }
 
 fill_arrays() {
-    declare -i local i
-    declare -i local j
+    declare -i local i=0
+    declare -i local j=0
     declare -a local items
     declare -r local ITEMS=/home/gabriel/files/projetos/github/bak/items.txt
 
-	i=0
 	for item in `cat $ITEMS`; do
 		items[$((i++))]=$item
 	done
 
 	i=0
-	j=0
 	for item in ${items[*]}; do
 		if [ -e $item ]; then
 			[[ `ls $item | wc -l` -eq 0 ]] && empty_items[$i]=$item || non_empty_items[$j]=$item
 		else
         	[[ -s $item ]] && non_empty_items[$j]=$item || empty_items[$i]=$item
 		fi
-		((i++))
-		((j++))
+		let i++ j++
 	done
 }
 
@@ -62,22 +59,14 @@ backup() {
         echo 'The following items was copied:'
         for item in ${non_empty_items[*]}; do
             cp -rp $item $TEMP_DIR
-            if [ -d $item ]; then
-                echo "(+) $item. (dir)"
-            else
-                echo "(+) $item. (file)"
-            fi
+			[[ -d $item ]] && echo "(+) $item (dir)." || echo "(-) $item (file)."
         done
     fi
 
     if [ -z "$empty_items" ]; then
         echo 'The following items was ignored:'
         for item in ${empty_items[*]}; do
-            if [ -d $item ]; then
-                echo "(-) $item. (dir) (empty)"
-            else
-                echo "(-) $item. (file) (empty)"
-            fi
+            [[ -d $item ]] && echo "(-) $item (dir) (empty)." || echo "(-) $item (file) (empty)."
         done
     fi
 }
@@ -101,7 +90,7 @@ fi
 
 mkdir -p $TEMP_DIR && echo "Was created the temporary directory \"$TEMP_DIR\"."
 
-if [ ! -d $DESTINY ]; then
+if [ ! -e $DESTINY ]; then
     mkdir -p $DESTINY && echo "Was created the directory \"$DESTINY\"."
 fi
 
