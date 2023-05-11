@@ -10,6 +10,10 @@
 
 Obs.: As regras acima não se aplicam a diretórios ou arquivos nativos, pois eles já vêm com o sistema e não faz sentido, nem se deve renomeá-los.
 
-## Saída do script
+## Saídas do script
 
-![output](https://user-images.githubusercontent.com/94535032/235560007-041854b8-8a76-45f2-bcbb-a54b4d5ffa8f.png)
+![new-output-1](https://github.com/bcXcb/bak/assets/94535032/40324822-4e2f-4442-8f65-1e3ac55bd8b7)
+
+![new-output-2](https://github.com/bcXcb/bak/assets/94535032/73a91ffe-edc2-434b-aba3-304bba2f77da)
+
+![new-output-3](https://github.com/bcXcb/bak/assets/94535032/65660aca-d753-4f77-8673-4992c7c09f58)
