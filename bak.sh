@@ -1,19 +1,20 @@
 #!/usr/bin/env bash
+
 # Backup in USB flash drives
+# The script works fine in Debian Linux
 
 declare -r TEMP_DIR=/home/gabriel/$((RANDOM % 256)) # 0 to 255
 declare -r MOUNTAGE_POINT=/media/gabriel
-declare -r DEVICE=/dev/sdb1
+declare -r DEVICE=/dev/sdb
 declare -r DESTINY=$MOUNTAGE_POINT/backup
 declare -r BACKUP_FILE=backup-`date +"%a"`.zip
 declare -a empty_items
 declare -a non_empty_items
+declare -i is_mount_point
 
 parameters() {
     case $1 in
-        '')
-			:
-			:;;
+        '') : ;;
         '--version')
             version
             exit 0;;
@@ -37,7 +38,7 @@ fill_arrays() {
     declare -i local j
     declare -a local items
     declare -r local ITEMS=/home/gabriel/files/projetos/github/bak/items.txt
-    
+
 	i=0
 	for item in `cat $ITEMS`; do
 		items[$((i++))]=$item
@@ -58,7 +59,7 @@ fill_arrays() {
 
 backup() {
     if [ -n "$non_empty_items" ]; then
-        echo "The following items was copied:"
+        echo 'The following items was copied:'
         for item in ${non_empty_items[*]}; do
             cp -rp $item $TEMP_DIR
             if [ -d $item ]; then
@@ -70,7 +71,7 @@ backup() {
     fi
 
     if [ -z "$empty_items" ]; then
-        echo "The following items was ignored:"
+        echo 'The following items was ignored:'
         for item in ${empty_items[*]}; do
             if [ -d $item ]; then
                 echo "(-) $item. (dir) (empty)"
@@ -85,31 +86,36 @@ parameters $1
 
 fill_arrays
 
-echo "Starting backup..."
+echo 'Starting backup...'
 
-mount $DEVICE $MOUNTAGE_POINT
-echo "The USB flash drive was mounted."
+mountpoint -q /media/gabriel
+exit_status=$?
 
-mkdir -p $TEMP_DIR
-echo "Was created the temporary directory \"$TEMP_DIR\"."
+if [ $exit_status -eq 0 ]; then
+	echo 'The USB flash drive already mounted.'
+else
+	echo 'Mounting the USB flash drive...'
+	mount $DEVICE $MOUNTAGE_POINT && echo 'The USB flash drive was mounted.'
+fi
+
+
+mkdir -p $TEMP_DIR && echo "Was created the temporary directory \"$TEMP_DIR\"."
 
 if [ ! -d $DESTINY ]; then
-    mkdir -p $DESTINY
-    echo "Was created the directory \"$DESTINY\"."
+    mkdir -p $DESTINY && echo "Was created the directory \"$DESTINY\"."
 fi
 
 backup
 
-echo "Compressing items..."
-zip -rq9 $BACKUP_FILE $TEMP_DIR
-echo "The items was compressed."
-mv $BACKUP_FILE $DESTINY
-echo "The compressed file was moved to the destiny."
+echo 'Compressing items...'
+# no compression (only store) is more fast
+#zip -rq9 $BACKUP_FILE $TEMP_DIR && echo 'The items was compressed.'
+zip -rq0 $BACKUP_FILE $TEMP_DIR && echo 'The items was compressed.'
+mv $BACKUP_FILE $DESTINY && echo 'The compressed file was moved to the destiny.'
 
-echo "Umounting USB flash drive..."
-umount $DEVICE
-echo "The USB flash drive was umounted."
+# it takes too long
+#echo 'Umounting USB flash drive...'
+#umount $DEVICE && echo 'The USB flash drive was umounted.'
 
-rm -r $TEMP_DIR
-echo "The temporary directory was removed."
-echo "Finished."
+rm -r $TEMP_DIR && echo 'The temporary directory was removed.'
+echo 'Backup finished.'
