@@ -5,7 +5,7 @@
 
 declare -r TEMP_DIR=/home/gabriel/$((RANDOM % 256)) # 0 to 255
 declare -r MOUNT_POINT=/media/gabriel
-declare -r DEVICE=/dev/sdb
+declare -r DEVICE=/dev/sdb1
 declare -r DESTINY=$MOUNT_POINT/backup
 declare -r BACKUP_FILE=backup-`date +"%a"`.zip
 declare -i exit_status
@@ -31,18 +31,19 @@ backup() {
 
 	fill_arrays
 
+	echo 'd - directory, f - file.'
     if [ -n "$non_empty_items" ]; then
         echo 'The following items was copied:'
         for item in ${non_empty_items[*]}; do
             cp -rp $item $TEMP_DIR
-			[[ -d $item ]] && echo "(+) $item (dir)." || echo "(+) $item (file)."
+			[[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
         done
     fi
 
     if [ ! -n "$empty_items" ]; then
         echo 'The following items was ignored (empty):'
         for item in ${empty_items[*]}; do
-            [[ -d $item ]] && echo "(-) $item (dir)." || echo "(-) $item (file)."
+            [[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
         done
     fi
 }
@@ -67,9 +68,11 @@ fi
 backup
 
 echo 'Compressing items...'
-zip -rq0 $BACKUP_FILE $TEMP_DIR && echo 'The items was compressed.'
+zip -rq0 $BACKUP_FILE $TEMP_DIR && echo 'Success.'
+echo 'Defragmenting compressed file...'
+e4defrag -v $BACKUP_FILE > /dev/null && echo 'Success.'
 echo 'Moving the compressed file to the destiny...'
-mv -uf $BACKUP_FILE $DESTINY && echo 'The compressed file was moved to the destiny.'
+mv -uf $BACKUP_FILE $DESTINY && echo 'Success.'
 
 #echo 'Umounting USB flash drive...'
 #umount $DEVICE && echo 'The USB flash drive was umounted.'
