@@ -67,12 +67,12 @@ fi
 
 backup
 
-echo 'Compressing items...'
-zip -rq0 $BACKUP_FILE $TEMP_DIR && echo 'Success.'
-echo 'Defragmenting compressed file...'
-e4defrag -v $BACKUP_FILE > /dev/null && echo 'Success.'
-echo 'Moving the compressed file to the destiny...'
-mv -uf $BACKUP_FILE $DESTINY && echo 'Success.'
+echo -n 'Compressing items...'
+zip -rq0 $BACKUP_FILE $TEMP_DIR && echo ' [Success].'
+echo -n 'Defragmenting compressed file...'
+e4defrag -v $BACKUP_FILE > /dev/null && echo ' [Success].'
+echo -n 'Moving the compressed file to the destiny...'
+mv -uf $BACKUP_FILE $DESTINY && echo ' [Success].'
 
 #echo 'Umounting USB flash drive...'
 #umount $DEVICE && echo 'The USB flash drive was umounted.'
