@@ -3,7 +3,8 @@
 # Backup in USB flash drives
 # The script works fine in Debian Linux
 
-declare -r TEMP_DIR=/home/gabriel/$((RANDOM % 256)) # 0 to 255
+declare -ri TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255
+declare -r TEMP_DIR=/home/gabriel/$TEMP_DIR_NAME
 declare -r MOUNT_POINT=/media/gabriel
 declare -r DEVICE=/dev/sdb1
 declare -r DESTINY=$MOUNT_POINT/backup
@@ -59,7 +60,7 @@ else
 	mount $DEVICE $MOUNT_POINT && echo 'The USB flash drive was mounted.'
 fi
 
-mkdir -p $TEMP_DIR && echo "Was created the temporary directory \"$TEMP_DIR\"."
+mkdir -p $TEMP_DIR && echo "Was created the temporary directory \"$TEMP_DIR_NAME\"."
 
 if [ ! -e $DESTINY ]; then
     mkdir -p $DESTINY && echo "Was created the directory \"$DESTINY\"."
@@ -74,8 +75,8 @@ e4defrag -v $BACKUP_FILE > /dev/null && echo ' [Success].'
 echo -n 'Moving the compressed file to the destiny...'
 mv -uf $BACKUP_FILE $DESTINY && echo ' [Success].'
 
-#echo 'Umounting USB flash drive...'
-#umount $DEVICE && echo 'The USB flash drive was umounted.'
+#echo -n 'Umounting USB flash drive...'
+#umount $DEVICE && echo ' [Success].'
 
 rm -r $TEMP_DIR && echo 'The temporary directory was removed.'
 echo 'Backup finished.'
