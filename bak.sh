@@ -3,80 +3,146 @@
 # Backup in USB flash drives
 # The script works fine in Debian Linux
 
-declare -ri TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255
-declare -r TEMP_DIR=/home/gabriel/$TEMP_DIR_NAME
-declare -r MOUNT_POINT=/media/gabriel
-declare -r DEVICE=/dev/sdb1
-declare -r DESTINY=$MOUNT_POINT/backup
-declare -r BACKUP_FILE=backup-`date +"%a"`.zip
-declare -i exit_status
+# To improve
+# - copy and compress files directly in USB flash drive
 
-fill_arrays() {
-    declare -i local i=0
-    declare -i local j=0
-    declare -r local ITEMS_LIST=/home/gabriel/files/projetos/github/bak/items.txt
+TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255
+TEMP_DIR=/home/gabriel/$TEMP_DIR_NAME
+MOUNT_POINT=/media/gabriel
+DESTINY=$MOUNT_POINT/backup
+BACKUP_FILE=backup-`date +"%a"`.zip
+device=
+
+function help {
+    echo 'bak [option] [device]'
+    echo 'bak -d or --device'
+    echo 'bak -h or --help'
+    echo 'bak -v or --version'
+}
+
+function version {
+    echo 'bak v1.0'
+    echo 'Written by: Gabriel C. de J. Oliveira'
+}
+
+function parameters {
+    case $1 in
+        '')
+            help
+            exit 1;;
+        '-h'|'--help')
+            help
+            exit 0;;
+        '-v'|'--version')
+            version
+            exit 0;;
+        '-d'|'--device')
+            if [ -n "$2" ]; then
+                device=$2
+            else
+                help
+                exit 1
+            fi;;
+        *)
+            help
+            exit 1
+    esac
+}
+
+function mount_device {
+    local status
+    
+    mountpoint -q $MOUNT_POINT
+    status=$?
+
+    if [ $status -eq 0 ]; then
+        echo 'The USB flash drive already mounted.'
+    else
+        echo -n 'Mounting USB flash drive...'
+        mount $device $MOUNT_POINT 2> /dev/null && echo ' [Success].' || echo ' [ Failure].'
+        mountpoint -q $MOUNT_POINT
+        
+        status=$?
+        if [ $status -ne 0 ]; then
+            exit 1
+        fi
+    fi
+}
+
+function dismount_device {
+    local status
+    
+    mountpoint -q $MOUNT_POINT
+    status=$?
+
+    if [ $status -eq 0 ]; then
+        echo -n 'Umounting USB flash drive...'
+        umount $device 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+    fi
+}
+
+function create_dirs {
+    mkdir -p $TEMP_DIR && echo "Was created the temporary directory \"$TEMP_DIR_NAME\"."
+
+    if [ ! -e $DESTINY ]; then
+        mkdir -p $DESTINY && echo "Was created the directory \"$DESTINY\"."
+    fi
+}
+
+function backup {
+    local i=0
+    local items
+    local ITEMS_LIST=/home/gabriel/files/projetos/github/bak/items.txt
 
 	for item in `cat $ITEMS_LIST`; do
-		if [ -d $item ]; then
-			[[ `ls $item | wc -l` -eq 0 ]] && empty_items[$i]=$item || non_empty_items[$j]=$item
-		else
-        	[[ -s $item ]] && non_empty_items[$j]=$item || empty_items[$i]=$item
-		fi
-		let i++ j++
+		if [ -e $item ]; then
+            if [ -d $item -a `ls $item | wc -l` -gt 0 ]; then
+                items[$((i++))]=$item
+            fi
+            
+            if [ -f $item -a -s $item ]; then
+                items[$((i++))]=$item
+            fi
+        fi
 	done
-}
-
-backup() {
-	declare -a empty_items
-	declare -a non_empty_items
-
-	fill_arrays
 
 	echo 'd - directory, f - file.'
-    if [ -n "$non_empty_items" ]; then
-        echo 'The following items was copied:'
-        for item in ${non_empty_items[*]}; do
-            cp -rp $item $TEMP_DIR
-			[[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
-        done
-    fi
+    echo 'The following items was copied:'
+    for item in ${items[*]}; do
+        cp -rp $item $TEMP_DIR
+        [[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
+    done
 
-    if [ ! -n "$empty_items" ]; then
-        echo 'The following items was ignored (empty):'
-        for item in ${empty_items[*]}; do
-            [[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
-        done
-    fi
+    echo 'The other items were ignored (empty).'
 }
 
+function compress {
+    echo -n 'Compressing items...'
+    zip -rq0 $BACKUP_FILE $TEMP_DIR 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+}
+
+function defragment {
+    echo -n 'Defragmenting compressed file...'
+    e4defrag -v $BACKUP_FILE > /dev/null 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+}
+
+function move {
+    echo -n 'Moving the compressed file to the destiny...'
+    mv -uf $BACKUP_FILE $DESTINY 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+}
+
+function clean {
+    rm -r $TEMP_DIR && echo 'The temporary directory was removed.'
+}
+
+parameters $*
 echo 'Starting backup...'
-
-mountpoint -q $MOUNT_POINT
-exit_status=$?
-
-if [ $exit_status -eq 0 ]; then
-	echo 'The USB flash drive already mounted.'
-else
-	mount $DEVICE $MOUNT_POINT && echo 'The USB flash drive was mounted.'
-fi
-
-mkdir -p $TEMP_DIR && echo "Was created the temporary directory \"$TEMP_DIR_NAME\"."
-
-if [ ! -e $DESTINY ]; then
-    mkdir -p $DESTINY && echo "Was created the directory \"$DESTINY\"."
-fi
-
+mount_device
+create_dirs
 backup
-
-echo -n 'Compressing items...'
-zip -rq0 $BACKUP_FILE $TEMP_DIR && echo ' [Success].'
-echo -n 'Defragmenting compressed file...'
-e4defrag -v $BACKUP_FILE > /dev/null && echo ' [Success].'
-echo -n 'Moving the compressed file to the destiny...'
-mv -uf $BACKUP_FILE $DESTINY && echo ' [Success].'
-
-#echo -n 'Umounting USB flash drive...'
-#umount $DEVICE && echo ' [Success].'
-
-rm -r $TEMP_DIR && echo 'The temporary directory was removed.'
+compress
+defragment
+move
+dismount_device
+clean
 echo 'Backup finished.'
