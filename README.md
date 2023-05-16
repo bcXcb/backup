@@ -12,6 +12,6 @@ Obs.: As regras acima não se aplicam a diretórios ou arquivos nativos, pois el
 
 ## Saídas do script
 
-![output](https://github.com/bcXcb/bak/assets/94535032/6c10d498-a330-422a-ba45-2d24a6843ae1)
+![output](https://github.com/bcXcb/bak/assets/94535032/a4f15f84-05a7-4bd2-b46d-9ac4e5c0cecf)
 
-![result](https://github.com/bcXcb/bak/assets/94535032/6fb0a54e-e130-4a91-af71-2518b2ad0bba)
+![result](https://github.com/bcXcb/bak/assets/94535032/0ba7f69b-be08-445a-b3b3-81bf0ab0d35d)
