@@ -51,7 +51,7 @@ function parameters {
 
 function mount_device {
     local status
-    
+
     mountpoint -q $MOUNT_POINT
     status=$?
 
@@ -61,7 +61,7 @@ function mount_device {
         echo -n 'Mounting USB flash drive...'
         mount $device $MOUNT_POINT 2> /dev/null && echo ' [Success].' || echo ' [ Failure].'
         mountpoint -q $MOUNT_POINT
-        
+
         status=$?
         if [ $status -ne 0 ]; then
             exit 1
@@ -71,12 +71,12 @@ function mount_device {
 
 function dismount_device {
     local status
-    
+
     mountpoint -q $MOUNT_POINT
     status=$?
 
     if [ $status -eq 0 ]; then
-        echo -n 'Umounting USB flash drive...'
+        echo -n 'Dismounting USB flash drive...'
         umount $device 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
     fi
 }
@@ -113,7 +113,7 @@ function backup {
         [[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
     done
 
-    echo 'The other items were ignored (empty).'
+    echo 'Other items were ignored (empty).'
 }
 
 function compress {
@@ -123,16 +123,16 @@ function compress {
 
 function defragment {
     echo -n 'Defragmenting compressed file...'
-    e4defrag -v $BACKUP_FILE > /dev/null 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+    e4defrag -v $DESTINY > /dev/null 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 }
 
 function move {
-    echo -n 'Moving the compressed file to the destiny...'
+    echo -n 'Moving compressed file to the destiny...'
     mv -uf $BACKUP_FILE $DESTINY 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 }
 
 function clean {
-    rm -r $TEMP_DIR && echo 'The temporary directory was removed.'
+    rm -r $TEMP_DIR && echo 'Temporary directory was removed.'
 }
 
 function notification {
@@ -146,9 +146,9 @@ mount_device
 create_dirs
 backup
 compress
-defragment
+#defragment
 move
 dismount_device
 clean
 echo 'Backup finished.'
-#notification
+notification
