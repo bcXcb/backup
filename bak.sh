@@ -107,7 +107,7 @@ function backup {
 	done
 
 	echo 'd - directory, f - file.'
-    echo 'The following items was copied:'
+    echo 'The following items were copied:'
     for item in ${items[*]}; do
         cp -rp $item $TEMP_DIR
         [[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
