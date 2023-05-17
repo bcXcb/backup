@@ -99,7 +99,7 @@ function backup {
             if [ -d $item -a `ls $item | wc -l` -gt 0 ]; then
                 items[$((i++))]=$item
             fi
-            
+
             if [ -f $item -a -s $item ]; then
                 items[$((i++))]=$item
             fi
@@ -135,6 +135,11 @@ function clean {
     rm -r $TEMP_DIR && echo 'The temporary directory was removed.'
 }
 
+function notification {
+	local sound=/home/gabriel/files/projetos/github/bak/sound.wav
+	aplay -q $sound &
+}
+
 parameters $*
 echo 'Starting backup...'
 mount_device
@@ -146,3 +151,4 @@ move
 dismount_device
 clean
 echo 'Backup finished.'
+#notification
