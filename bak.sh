@@ -123,7 +123,7 @@ function compress {
 
 function defragment {
     echo -n 'Defragmenting compressed file...'
-    e4defrag -v $DESTINY > /dev/null 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+    e4defrag -v $BACKUP_FILE > /dev/null 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 }
 
 function move {
@@ -146,7 +146,7 @@ mount_device
 create_dirs
 backup
 compress
-#defragment
+defragment
 move
 dismount_device
 clean
