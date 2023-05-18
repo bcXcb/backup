@@ -5,25 +5,41 @@
 
 # To improve
 # - copy and compress files directly in USB flash drive
-#
+# - verify if the sound device is busy
+# - the mount point must be a command line parameter
+# - to create the function "check_dependences" for check and fix (if possible) the dependence problems
 #
 
-TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255
-TEMP_DIR=/home/gabriel/$TEMP_DIR_NAME
-MOUNT_POINT=/media/gabriel
-DESTINY=$MOUNT_POINT/backup
-BACKUP_FILE=backup-`date +"%a"`.zip
-device=
+declare TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255, an octect
+declare TEMP_DIR=/home/gabriel/$TEMP_DIR_NAME
+declare MOUNT_POINT=/media/gabriel
+declare DESTINY=$MOUNT_POINT/backup
+declare BACKUP_FILE=backup-`date +"%a"`.zip
+declare device
 
 function help {
-    echo 'bak [option] [device]'
-    echo 'bak -d or --device'
-    echo 'bak -h or --help'
-    echo 'bak -v or --version'
+	echo 'NAME'
+    echo -e '\tbak - create backup of files and directories in usb flash drives'
+	echo ''
+	echo 'SYNOPSIS'
+    echo -e '\tbak [OPTION]'
+   	echo -e '\tbak [OPTION] [DEVICE]'
+	echo ''
+	echo 'DESCRIPTION'
+    echo -e '\t-d, --device'
+	echo -e '\t\tselect the device on which the backup will be performed'
+    echo -e '\t-h, --help'
+	echo -e '\t\tdisplay this help and exit'
+    echo -e '\t-v, --version'
+	echo -e '\t\toutput version information and exit'
+	echo ''
+	echo 'AUTHOR'
+	echo -e '\tWritten by Gabriel Cavalcante de Jesus Oliveira.'
 }
 
 function version {
     echo 'bak v1.0'
+	echo 'license: none - pubic domain'
     echo 'Written by: Gabriel C. de J. Oliveira'
 }
 
@@ -62,9 +78,11 @@ function mount_device {
     else
         echo -n 'Mounting USB flash drive...'
         mount $device $MOUNT_POINT 2> /dev/null && echo ' [Success].' || echo ' [ Failure].'
-        mountpoint -q $MOUNT_POINT
 
+		# bad implementation
+        mountpoint -q $MOUNT_POINT
         status=$?
+
         if [ $status -ne 0 ]; then
             exit 1
         fi
@@ -115,7 +133,7 @@ function backup {
         [[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
     done
 
-    echo 'Other items were ignored (empty).'
+    echo 'Empty directories and files were not copied.'
 }
 
 function compress {
@@ -139,7 +157,7 @@ function clean {
 
 function notification {
 	local sound=/home/gabriel/files/projetos/github/bak/sound.wav
-	aplay -q $sound &
+	aplay -q $sound & # run in background
 }
 
 parameters $*
