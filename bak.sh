@@ -5,6 +5,8 @@
 
 # To improve
 # - copy and compress files directly in USB flash drive
+#
+#
 
 TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255
 TEMP_DIR=/home/gabriel/$TEMP_DIR_NAME
