@@ -9,11 +9,12 @@
 # - to create the function "check_dependences" for check and fix (if possible) the dependence problems
 #
 
-declare TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255, an octect
-declare TEMP_DIR=/home/gabriel/$TEMP_DIR_NAME
 declare MOUNT_POINT=/media/gabriel
 declare DESTINY=$MOUNT_POINT/backup
-declare BACKUP_FILE=`date +"%A"`.zip
+declare TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255, an octect
+declare TEMP_DIR=$DESTINY/$TEMP_DIR_NAME
+declare BACKUP_FILE_NAME=`date +"%A"`.zip
+declare BACKUP_FILE_PATH=$DESTINY/$BACKUP_FILE_NAME
 declare device
 
 function help {
@@ -93,11 +94,11 @@ function toggle_flash_drive_mount {
 }
 
 function create_dirs {
-    mkdir -p $TEMP_DIR && echo "Was created the temporary directory \"$TEMP_DIR_NAME\"."
-
     if [ ! -e $DESTINY ]; then
         mkdir -p $DESTINY && echo "Was created the directory \"$DESTINY\"."
     fi
+
+    mkdir -p $TEMP_DIR && echo "Was created the temporary directory \"$TEMP_DIR_NAME\"."
 }
 
 function backup {
@@ -129,18 +130,17 @@ function backup {
 }
 
 function compress {
+    if [ -e $BACKUP_FILE_PATH ]; then
+        rm -rf $BACKUP_FILE_PATH
+    fi
+
     echo -n 'Compressing items...'
-    zip -rq0 $BACKUP_FILE $TEMP_DIR 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+    zip -rq0 $BACKUP_FILE_PATH $TEMP_DIR 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 }
 
 function defragment {
     echo -n 'Defragmenting compressed file...'
-    e4defrag -v $BACKUP_FILE > /dev/null 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
-}
-
-function move {
-    echo -n 'Moving compressed file to the destiny...'
-    mv -uf $BACKUP_FILE $DESTINY 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+    e4defrag -v $BACKUP_FILE_PATH > /dev/null 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 }
 
 function clean {
@@ -173,9 +173,8 @@ toggle_flash_drive_mount --mount
 create_dirs
 backup
 compress
-defragment
-move
-toggle_flash_drive_mount --dismount
 clean
+defragment
+toggle_flash_drive_mount --dismount
 echo 'Backup finished.'
 notification
