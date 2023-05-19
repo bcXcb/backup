@@ -4,10 +4,8 @@
 # The script works fine in Debian Linux
 
 # To improve
-# - copy and compress files directly in flash drives
 # - the mount point must be a command line parameter
 # - to create the function "check_dependences" for check and fix (if possible) the dependence problems
-#
 
 declare MOUNT_POINT=/media/gabriel
 declare DESTINY=$MOUNT_POINT/backup
