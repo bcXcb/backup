@@ -4,15 +4,15 @@
 # The script works fine in Debian Linux
 
 # To improve
-# - create the function "check_dependences" for check and fix dependence problems
+# - refactoring
 
 # Functions
 # - help
 # - version
 # - parameters
 # - flash_drive_is_busy
+# - check_dependences
 # - toggle_flash_drive_mount
-# - create_dirs
 # - backup
 # - compress
 # - clean
@@ -83,6 +83,15 @@ function flash_drive_is_busy {
 	[[ $? -eq 0 ]] && echo 'True' || echo 'False'
 }
 
+function check_dependences {
+    # create directories
+    if [ ! -e $BACKUP_DIR_PATH ]; then
+        mkdir -p $BACKUP_DIR_PATH && echo "Was created the directory \"$BACKUP_DIR_PATH\"."
+    fi
+
+    mkdir -p $TEMP_DIR_PATH && echo "Was created the temporary directory \"$TEMP_DIR_NAME\"."
+}
+
 # review this implementation
 function toggle_flash_drive_mount {
 	local action=$1
@@ -108,18 +117,10 @@ function toggle_flash_drive_mount {
 	fi
 }
 
-function create_dirs {
-    if [ ! -e $BACKUP_DIR_PATH ]; then
-        mkdir -p $BACKUP_DIR_PATH && echo "Was created the directory \"$BACKUP_DIR_PATH\"."
-    fi
-
-    mkdir -p $TEMP_DIR_PATH && echo "Was created the temporary directory \"$TEMP_DIR_NAME\"."
-}
-
 function backup {
     local i=0
     local items=
-	local file_name='dirs-and-files.txt'
+	local file_name='dirs-and-files.txt' # text file containing path of directories and files to backup
     local ITEMS_LIST=/home/gabriel/files/projetos/github/bak/$file_name
 
 	for item in `cat $ITEMS_LIST`; do
@@ -179,6 +180,7 @@ function notification {
 }
 
 parameters $*
+# checks if the pendrive is busy, waiting for it to be idle
 if [ `flash_drive_is_busy` = 'True' ]; then
     echo 'The flash drive is busy.'
     echo -n 'Waiting...'
@@ -188,8 +190,8 @@ if [ `flash_drive_is_busy` = 'True' ]; then
 fi
 echo ''
 echo 'Starting backup...'
+check_dependences
 toggle_flash_drive_mount --mount
-create_dirs
 backup
 compress
 clean
