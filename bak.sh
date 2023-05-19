@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 
-# Backup in USB flash drives
+# Backup in flash drives
 # The script works fine in Debian Linux
 
 # To improve
-# - copy and compress files directly in USB flash drive
-# - verify if the sound device is busy
+# - copy and compress files directly in flash drives
 # - the mount point must be a command line parameter
 # - to create the function "check_dependences" for check and fix (if possible) the dependence problems
 #
@@ -14,12 +13,12 @@ declare TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255, an octect
 declare TEMP_DIR=/home/gabriel/$TEMP_DIR_NAME
 declare MOUNT_POINT=/media/gabriel
 declare DESTINY=$MOUNT_POINT/backup
-declare BACKUP_FILE=backup-`date +"%a"`.zip
+declare BACKUP_FILE=`date +"%A"`.zip
 declare device
 
 function help {
 	echo 'NAME'
-    echo -e '\tbak - create backup of files and directories in usb flash drives'
+    echo -e '\tbak - create backup of files and directories in flash drives'
 	echo ''
 	echo 'SYNOPSIS'
     echo -e '\tbak [OPTION]'
@@ -48,13 +47,13 @@ function parameters {
         '')
             help
             exit 1;;
-        '-h'|'--help')
+        '-h' | '--help')
             help
             exit 0;;
-        '-v'|'--version')
+        '-v' | '--version')
             version
             exit 0;;
-        '-d'|'--device')
+        '-d' | '--device')
             if [ -n "$2" ]; then
                 device=$2
             else
@@ -67,38 +66,30 @@ function parameters {
     esac
 }
 
-function mount_device {
-    local status
 
-    mountpoint -q $MOUNT_POINT
-    status=$?
+# review the implementation
+function toggle_flash_drive_mount {
+	local action=$1
 
-    if [ $status -eq 0 ]; then
-        echo 'The USB flash drive already mounted.'
-    else
-        echo -n 'Mounting USB flash drive...'
-        mount $device $MOUNT_POINT 2> /dev/null && echo ' [Success].' || echo ' [ Failure].'
+	if [ $action = '--mount' ]; then
+    	mountpoint -q $MOUNT_POINT
 
-		# bad implementation
-        mountpoint -q $MOUNT_POINT
-        status=$?
+	    if [ $? -eq 0 ]; then
+    	    echo 'The flash drive already mounted.'
+	    else
+        	echo -n 'Mounting flash drive...'
+    	    mount $device $MOUNT_POINT 2> /dev/null && echo ' [Success].' || echo ' [ Failure].'
+	    fi
+	else
+    	mountpoint -q $MOUNT_POINT
 
-        if [ $status -ne 0 ]; then
-            exit 1
-        fi
-    fi
-}
-
-function dismount_device {
-    local status
-
-    mountpoint -q $MOUNT_POINT
-    status=$?
-
-    if [ $status -eq 0 ]; then
-        echo -n 'Dismounting USB flash drive...'
-        umount $device 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
-    fi
+	    if [ $? -ne 0 ]; then
+    	    echo 'The flash drive already dismounted.'
+	    else
+        	echo -n 'Dismounting flash drive...'
+    	    umount $device 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+	    fi
+	fi
 }
 
 function create_dirs {
@@ -112,7 +103,8 @@ function create_dirs {
 function backup {
     local i=0
     local items
-    local ITEMS_LIST=/home/gabriel/files/projetos/github/bak/items.txt
+	local file_name='dirs-and-files.txt'
+    local ITEMS_LIST=/home/gabriel/files/projetos/github/bak/$file_name
 
 	for item in `cat $ITEMS_LIST`; do
 		if [ -e $item ]; then
@@ -155,20 +147,35 @@ function clean {
     rm -r $TEMP_DIR && echo 'Temporary directory was removed.'
 }
 
+function sound_device_is_busy {
+    local sound_device=/dev/snd/pcmC0D0p # default sound output device
+
+	fuser -s $sound_device
+
+	[[ $? -eq 0 ]] && echo 'True' || echo 'False'
+}
+
 function notification {
-	local sound=/home/gabriel/files/projetos/github/bak/sound.wav
-	aplay -q $sound & # run in background
+	local is_busy
+	local file_name='sound.wav'
+	local sound=/home/gabriel/files/projetos/github/bak/$file_name
+
+	is_busy=`sound_device_is_busy` # verify if any process is using the device, returning "True" at positive case
+
+	if [ $is_busy = 'False' ]; then
+		aplay -q $sound & # this process run in background
+	fi
 }
 
 parameters $*
 echo 'Starting backup...'
-mount_device
+toggle_flash_drive_mount --mount
 create_dirs
 backup
 compress
 defragment
 move
-dismount_device
+toggle_flash_drive_mount --dismount
 clean
 echo 'Backup finished.'
 notification
