@@ -4,7 +4,21 @@
 # The script works fine in Debian Linux
 
 # To improve
-# - to create the function "check_dependences" for check and fix (if possible) the dependence problems or stop the execution
+# - create the function "check_dependences" for check and fix dependence problems
+
+# Functions
+# - help
+# - version
+# - parameters
+# - flash_drive_is_busy
+# - toggle_flash_drive_mount
+# - create_dirs
+# - backup
+# - compress
+# - clean
+# - defragment
+# - sound_device_is_busy
+# - notification
 
 declare flash_drive_path=
 declare MOUNT_POINT_PATH=/media/gabriel
@@ -64,6 +78,10 @@ function parameters {
     esac
 }
 
+function flash_drive_is_busy {
+	fuser -s $flash_drive_path
+	[[ $? -eq 0 ]] && echo 'True' || echo 'False'
+}
 
 # review this implementation
 function toggle_flash_drive_mount {
@@ -135,38 +153,28 @@ function compress {
     zip -rq0 $BACKUP_FILE_PATH $TEMP_DIR_PATH 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 }
 
+function clean {
+    rm -r $TEMP_DIR_PATH && echo 'Temporary directory was removed.'
+}
+
 function defragment {
     echo -n 'Defragmenting compressed file...'
     e4defrag -v $BACKUP_FILE_PATH > /dev/null 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 }
 
-function clean {
-    rm -r $TEMP_DIR_PATH && echo 'Temporary directory was removed.'
-}
-
-function flash_drive_is_busy {
-	fuser -s $flash_drive_path
-
-	[[ $? -eq 0 ]] && echo 'True' || echo 'False'
-}
-
 function sound_device_is_busy {
     local sound_device=/dev/snd/pcmC0D0p # default sound output device
-
 	fuser -s $sound_device
-
 	[[ $? -eq 0 ]] && echo 'True' || echo 'False'
 }
 
 function notification {
-	local is_busy=
 	local file_name='sound.wav'
-	local sound=/home/gabriel/files/projetos/github/bak/$file_name
+	local sound_path=/home/gabriel/files/projetos/github/bak/$file_name
 
-	is_busy=`sound_device_is_busy` # verify if any process is using the device, returning "True" at positive case
-
-	if [ $is_busy = 'False' ]; then
-		aplay -q $sound & # this process run in background
+    # verify if any process is using the device, returning "True" at positive case
+	if [ `sound_device_is_busy` = 'False' ]; then
+		aplay -q $sound_path & # this process run in background
 	fi
 }
 
@@ -178,6 +186,7 @@ if [ `flash_drive_is_busy` = 'True' ]; then
         : # nothing
     done
 fi
+echo ''
 echo 'Starting backup...'
 toggle_flash_drive_mount --mount
 create_dirs
