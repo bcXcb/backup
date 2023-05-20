@@ -1,4 +1,4 @@
-# Bak
+# Backup
 
 ## Boas práticas para nomeação de diretórios e arquivos
 
