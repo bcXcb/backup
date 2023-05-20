@@ -30,18 +30,18 @@ declare BACKUP_FILE_PATH=$BACKUP_DIR_PATH/$BACKUP_FILE_NAME
 
 function help {
 	echo 'NAME'
-    echo -e '\tbackup - create backup of files and directories in flash drives'
+	echo -e '\tbackup - create backup of files and directories in flash drives'
 	echo ''
 	echo 'SYNOPSIS'
-    echo -e '\tbackup [OPTION]'
+	echo -e '\tbackup [OPTION]'
    	echo -e '\tbackup [OPTION] [DEVICE]'
 	echo ''
 	echo 'DESCRIPTION'
-    echo -e '\t-d, --device'
+	echo -e '\t-d, --device'
 	echo -e '\t\tselect the device on which the backup will be performed'
-    echo -e '\t-h, --help'
+	echo -e '\t-h, --help'
 	echo -e '\t\tdisplay this help and exit'
-    echo -e '\t-v, --version'
+	echo -e '\t-v, --version'
 	echo -e '\t\toutput version information and exit'
 	echo ''
 	echo 'AUTHOR'
@@ -50,7 +50,7 @@ function help {
 
 function version {
     echo 'backup v1.0'
-	echo 'license: none - pubic domain'
+    echo 'license: none - pubic domain'
     echo 'Written by: Gabriel C. de J. Oliveira'
 }
 
@@ -186,6 +186,7 @@ if [ `flash_drive_is_busy` = 'True' ]; then
     echo -n 'Waiting...'
     while [ `flash_drive_is_busy` = 'True' ]; do
         : # nothing
+		sleep 1 # avoidance of unnecessary processing
     done
 	echo ''
 fi
