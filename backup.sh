@@ -30,11 +30,11 @@ declare BACKUP_FILE_PATH=$BACKUP_DIR_PATH/$BACKUP_FILE_NAME
 
 function help {
 	echo 'NAME'
-    echo -e '\tbak - create backup of files and directories in flash drives'
+    echo -e '\tbackup - create backup of files and directories in flash drives'
 	echo ''
 	echo 'SYNOPSIS'
-    echo -e '\tbak [OPTION]'
-   	echo -e '\tbak [OPTION] [DEVICE]'
+    echo -e '\tbackup [OPTION]'
+   	echo -e '\tbackup [OPTION] [DEVICE]'
 	echo ''
 	echo 'DESCRIPTION'
     echo -e '\t-d, --device'
@@ -49,7 +49,7 @@ function help {
 }
 
 function version {
-    echo 'bak v1.0'
+    echo 'backup v1.0'
 	echo 'license: none - pubic domain'
     echo 'Written by: Gabriel C. de J. Oliveira'
 }
@@ -121,7 +121,7 @@ function backup {
     local i=0
     local items=
 	local file_name='dirs-and-files.txt' # text file containing path of directories and files to backup
-    local ITEMS_LIST=/home/gabriel/files/projetos/github/bak/$file_name
+    local ITEMS_LIST=/home/gabriel/files/projetos/github/backup/$file_name
 
 	for item in `cat $ITEMS_LIST`; do
 		if [ -e $item ]; then
@@ -171,7 +171,7 @@ function sound_device_is_busy {
 
 function notification {
 	local file_name='sound.wav'
-	local sound_path=/home/gabriel/files/projetos/github/bak/$file_name
+	local sound_path=/home/gabriel/files/projetos/github/backup/$file_name
 
     # verify if any process is using the device, returning "True" at positive case
 	if [ `sound_device_is_busy` = 'False' ]; then
