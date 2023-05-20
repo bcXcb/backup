@@ -1,4 +1,5 @@
 /home/gabriel/files/estudos
+/home/gabriel/files/cursos
 /home/gabriel/files/oasis
 /home/gabriel/files/projetos
 /home/gabriel/files/txt
@@ -11,3 +12,4 @@
 /home/gabriel/Vídeos
 /home/gabriel/.ssh
 /home/gabriel/.gitconfig
+/home/gabriel/.local/share/flare
