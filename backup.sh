@@ -10,20 +10,19 @@
 # - help
 # - version
 # - parameters
-# - flash_drive_is_busy
+# - device_is_busy
 # - toggle_flash_drive_mount
 # - check_dependences
 # - backup
 # - compress
 # - clean
 # - defragment
-# - sound_device_is_busy
 # - notification
 
 declare flash_drive_path=
 declare MOUNT_POINT_PATH=/media/gabriel
 declare BACKUP_DIR_PATH=$MOUNT_POINT_PATH/backup
-declare TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255, an octect
+declare TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255
 declare TEMP_DIR_PATH=$BACKUP_DIR_PATH/$TEMP_DIR_NAME
 declare BACKUP_FILE_NAME=`date +"%A"`.zip
 declare BACKUP_FILE_PATH=$BACKUP_DIR_PATH/$BACKUP_FILE_NAME
@@ -78,9 +77,10 @@ function parameters {
     esac
 }
 
-function flash_drive_is_busy {
-	fuser -s $flash_drive_path
-	[[ $? -eq 0 ]] && echo 'True' || echo 'False'
+function device_is_busy {
+    local device_path=$1
+    fuser -s $device_path
+    [[ $? -eq 0 ]] && echo 'True' || echo 'False'
 }
 
 # review this implementation
@@ -109,12 +109,51 @@ function toggle_flash_drive_mount {
 }
 
 function check_dependences {
-    # create directories
-    if [ ! -e $BACKUP_DIR_PATH ]; then
-        mkdir -p $BACKUP_DIR_PATH && echo "Was created the directory \"$BACKUP_DIR_PATH\"."
+    # check if necessary programs are available
+    local programs=(zip e4defrag fuser mountpoint aplay)
+    local COMMAND_NOT_FOUND=127
+    local flag='False'
+    
+    echo -n 'Checking dependences...'
+    echo ''
+    
+    for program in ${programs[*]}; do
+        # "> /dev/null 2>&1": redirect the standard output and standard error output to the null device
+        command -v $program > /dev/null 2>&1
+        if [ $? -ne 0 ]; then
+            echo "Error: the program \"$program\" is not available."
+            flag='True'
+        fi
+    done
+    
+    if [ $flag = 'True' ]; then
+        exit 1
+    fi
+    
+    # verifies that the backup directory exists and is writable
+    if [ ! -d $BACKUP_DIR_PATH ]; then
+        mkdir -p $BACKUP_DIR_PATH
+        if [ $? -ne 0 ]; then
+            echo 'Was not possible create the backup directory.'
+            exit 1
+        fi
+    else
+        if [ ! -w $BACKUP_DIR_PATH ]; then
+            chmod +w $BACKUP_DIR_PATH
+            if [ $? -ne 0 ]; then
+                echo 'The backup directory is not writable.'
+                echo 'Was not possible to make the backup directory writable.'
+                exit 1
+            fi
+        fi
     fi
 
+    # Check if the temporary directory can be created.
     mkdir -p $TEMP_DIR_PATH && echo "Was created the temporary directory \"$TEMP_DIR_NAME\"."
+    if [ $? -ne 0 ]; then
+        echo "Error: unable to create temporary directory \"$TEMP_DIR_PATH\"."
+        exit 1
+    fi
 }
 
 function backup {
@@ -160,32 +199,26 @@ function clean {
 
 function defragment {
     echo -n 'Defragmenting compressed file...'
-    e4defrag -v $BACKUP_FILE_PATH > /dev/null 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
-}
-
-function sound_device_is_busy {
-    local sound_device=/dev/snd/pcmC0D0p # default sound output device
-	fuser -s $sound_device
-	[[ $? -eq 0 ]] && echo 'True' || echo 'False'
+    e4defrag -v $BACKUP_FILE_PATH > /dev/null 2>&1 && echo ' [Success].' || echo ' [Failure].'
 }
 
 function notification {
 	local file_name='sound.wav'
 	local sound_path=/home/gabriel/files/projetos/github/backup/$file_name
+	local sound_device_path=/dev/snd/pcmC0D0p # default sound output device
 
     # verify if any process is using the device, returning "True" at positive case
-	if [ `sound_device_is_busy` = 'False' ]; then
+	if [ `device_is_busy $sound_device_path` = 'False' ]; then
 		aplay -q $sound_path & # this process run in background
 	fi
 }
 
 parameters $*
 # checks if the pendrive is busy, waiting for it to be idle
-if [ `flash_drive_is_busy` = 'True' ]; then
+if [ `device_is_busy $flash_drive_path` = 'True' ]; then
     echo 'The flash drive is busy.'
     echo -n 'Waiting...'
-    while [ `flash_drive_is_busy` = 'True' ]; do
-        : # nothing
+    while [ `device_is_busy $flash_drive_path` = 'True' ]; do
 		sleep 1 # avoidance of unnecessary processing
     done
 	echo ''
