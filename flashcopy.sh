@@ -3,22 +3,6 @@
 # Backup of directories and files in flash drives
 # The script works fine in Debian Linux
 
-# To improve
-# - refactoring
-
-# Functions
-# - help
-# - version
-# - parameters
-# - device_is_busy
-# - toggle_flash_drive_mount
-# - check_dependences
-# - backup
-# - compress
-# - clean
-# - defragment
-# - notification
-
 declare flash_drive_path=
 declare MOUNT_POINT_PATH=/media/gabriel
 declare BACKUP_DIR_PATH=$MOUNT_POINT_PATH/backup
@@ -29,11 +13,11 @@ declare BACKUP_FILE_PATH=$BACKUP_DIR_PATH/$BACKUP_FILE_NAME
 
 function help {
 	echo 'NAME'
-	echo -e '\tbackup - create backup of files and directories in flash drives'
+	echo -e '\tflashcopy - create backup of files and directories in flash drives'
 	echo ''
 	echo 'SYNOPSIS'
-	echo -e '\tbackup [OPTION]'
-   	echo -e '\tbackup [OPTION] [DEVICE]'
+	echo -e '\tflashcopy [OPTION]'
+   	echo -e '\tflashcopy [OPTION] [DEVICE]'
 	echo ''
 	echo 'DESCRIPTION'
 	echo -e '\t-d, --device'
@@ -48,7 +32,7 @@ function help {
 }
 
 function version {
-    echo 'backup v1.0'
+    echo 'flashcopy v1.0'
     echo 'license: none - pubic domain'
     echo 'Written by: Gabriel C. de J. Oliveira'
 }
@@ -113,10 +97,10 @@ function check_dependences {
     local programs=(zip e4defrag fuser mountpoint aplay)
     local COMMAND_NOT_FOUND=127
     local flag='False'
-    
+
     echo -n 'Checking dependences...'
     echo ''
-    
+
     for program in ${programs[*]}; do
         # "> /dev/null 2>&1": redirect the standard output and standard error output to the null device
         command -v $program > /dev/null 2>&1
@@ -125,11 +109,11 @@ function check_dependences {
             flag='True'
         fi
     done
-    
+
     if [ $flag = 'True' ]; then
         exit 1
     fi
-    
+
     # verifies that the backup directory exists and is writable
     if [ ! -d $BACKUP_DIR_PATH ]; then
         mkdir -p $BACKUP_DIR_PATH
@@ -159,8 +143,8 @@ function check_dependences {
 function backup {
     local i=0
     local items=
-	local file_name='dirs-and-files.txt' # text file containing path of directories and files to backup
-    local ITEMS_LIST=/home/gabriel/files/projetos/github/backup/$file_name
+	local file_name='items-for-backup.txt' # text file containing path of directories and files to backup
+    local ITEMS_LIST=/home/gabriel/files/projetos/github/flashcopy/$file_name
 
 	for item in `cat $ITEMS_LIST`; do
 		if [ -e $item ]; then
@@ -203,8 +187,8 @@ function defragment {
 }
 
 function notification {
-	local file_name='sound.wav'
-	local sound_path=/home/gabriel/files/projetos/github/backup/$file_name
+	local file_name='notification.wav'
+	local sound_path=/home/gabriel/files/projetos/github/flashcopy/$file_name
 	local sound_device_path=/dev/snd/pcmC0D0p # default sound output device
 
     # verify if any process is using the device, returning "True" at positive case
