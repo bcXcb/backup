@@ -144,7 +144,7 @@ function backup {
     local i=0
     local items=
 	local file_name='items-for-backup.txt' # text file containing path of directories and files to backup
-    local ITEMS_LIST=/home/gabriel/files/projetos/github/flashcopy/$file_name
+    local ITEMS_LIST=/home/gabriel/arquivos/projetos/github/flashcopy/$file_name
 
 	for item in `cat $ITEMS_LIST`; do
 		if [ -e $item ]; then
@@ -168,17 +168,20 @@ function backup {
     echo 'Empty directories and files were not copied.'
 }
 
-function compress {
+# compression with exclusion
+function compression_with_exclusion {
     if [ -e $BACKUP_FILE_PATH ]; then
         rm -rf $BACKUP_FILE_PATH
     fi
 
+    # zip -9: maximum level of compression
+    # zip -0: no compression, only store
     echo -n 'Compressing items...'
-    zip -rq0 $BACKUP_FILE_PATH $TEMP_DIR_PATH 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
-}
+    zip -rq9 $BACKUP_FILE_PATH $TEMP_DIR_PATH 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 
-function clean {
-    rm -r $TEMP_DIR_PATH && echo 'Temporary directory was removed.'
+    # remove the temporary directory
+    echo -n 'Removing the temporary directory...'
+    rm -r $TEMP_DIR_PATH && echo ' [ Success].' || echo ' [Failure].'
 }
 
 function defragment {
@@ -188,7 +191,7 @@ function defragment {
 
 function notification {
 	local file_name='notification.wav'
-	local sound_path=/home/gabriel/files/projetos/github/flashcopy/$file_name
+	local sound_path=/home/gabriel/arquivos/projetos/github/flashcopy/$file_name
 	local sound_device_path=/dev/snd/pcmC0D0p # default sound output device
 
     # verify if any process is using the device, returning "True" at positive case
@@ -211,8 +214,7 @@ echo 'Starting backup...'
 toggle_flash_drive_mount --mount
 check_dependences
 backup
-compress
-clean
+compression_with_exclusion
 defragment
 toggle_flash_drive_mount --dismount
 echo 'Backup finished.'
