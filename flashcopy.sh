@@ -171,7 +171,7 @@ function backup {
     done
 
     echo "$non_empty_items_total directories and files were copied."
-    echo "$empty_items_total empty or nonexistent directories and files are ignored."
+    echo "$empty_items_total empty or nonexistent directories and files were ignored."
 }
 
 # compression with exclusion
