@@ -143,19 +143,24 @@ function check_dependences {
 function backup {
     local i=0
     local items=
-	local file_name='items-for-backup.txt' # text file containing path of directories and files to backup
+    local non_empty_items_total=0
+    local empty_items_total=0
+    local file_name='items-for-backup.txt' # text file containing path of directories and files to backup
     local ITEMS_LIST=/home/gabriel/arquivos/projetos/github/flashcopy/$file_name
 
 	for item in `cat $ITEMS_LIST`; do
 		if [ -e $item ]; then
-            if [ -d $item -a `ls $item | wc -l` -gt 0 ]; then
-                items[$((i++))]=$item
-            fi
+            		if [ -d $item -a `ls $item | wc -l` -gt 0 ]; then
+	                	items[$((i++))]=$item
+			fi
 
-            if [ -f $item -a -s $item ]; then
-                items[$((i++))]=$item
-            fi
-        fi
+	            	if [ -f $item -a -s $item ]; then
+        	        	items[$((i++))]=$item
+			fi
+			((non_empty_items_total++))
+		else
+			((empty_items_total++))
+        	fi
 	done
 
 	echo 'd - directory, f - file.'
@@ -165,7 +170,8 @@ function backup {
         [[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
     done
 
-    echo 'Empty directories and files were not copied.'
+    echo "$non_empty_items_total directories and files were copied."
+    echo "$empty_items_total empty or nonexistent directories and files are ignored."
 }
 
 # compression with exclusion
