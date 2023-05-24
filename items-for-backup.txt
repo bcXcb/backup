@@ -1,7 +1,9 @@
 --arquivos--
 /home/gabriel/arquivos/estudos
+/home/gabriel/arquivos/github
+/home/gabriel/arquivos/scripts
+/home/gabriel/arquivos/tcc
 /home/gabriel/arquivos/temporario
-/home/gabriel/arquivos/projetos
 /home/gabriel/arquivos/textos
 --default--
 /home/gabriel/Documentos

@@ -146,7 +146,7 @@ function backup {
     local non_empty_items_total=0
     local empty_items_total=0
     local file_name='items-for-backup.txt' # text file containing path of directories and files to backup
-    local ITEMS_LIST=/home/gabriel/arquivos/projetos/github/flashcopy/$file_name
+    local ITEMS_LIST=/home/gabriel/arquivos/github/flashcopy/$file_name
 
 	for item in `cat $ITEMS_LIST`; do
 		if [ -e $item ]; then
@@ -197,7 +197,7 @@ function defragment {
 
 function notification {
 	local file_name='notification.wav'
-	local sound_path=/home/gabriel/arquivos/projetos/github/flashcopy/$file_name
+	local sound_path=/home/gabriel/arquivos/github/flashcopy/$file_name
 	local sound_device_path=/dev/snd/pcmC0D0p # default sound output device
 
     # verify if any process is using the device, returning "True" at positive case
