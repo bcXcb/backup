@@ -166,7 +166,7 @@ function backup {
 	echo 'd - directory, f - file.'
     echo 'The following items were copied:'
     for item in ${items[*]}; do
-        cp -rp $item $TEMP_DIR_PATH
+        cp -r --no-preserve=ownership $item $TEMP_DIR_PATH
         [[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
     done
 
@@ -190,6 +190,9 @@ function compression_with_exclusion {
     rm -r $TEMP_DIR_PATH && echo ' [ Success].' || echo ' [Failure].'
 }
 
+# note: normally, flash memory devices are formatted with fat32 or exFAT file
+# systems, therefore, specific tools must be used to defragment these file
+# systems. "e4defrag" is a tool for ext4 file system defragmentation.
 function defragment {
     echo -n 'Defragmenting compressed file...'
     e4defrag -v $BACKUP_FILE_PATH > /dev/null 2>&1 && echo ' [Success].' || echo ' [Failure].'
@@ -221,7 +224,7 @@ toggle_flash_drive_mount --mount
 check_dependences
 backup
 compression_with_exclusion
-defragment
+#defragment
 toggle_flash_drive_mount --dismount
 echo 'Backup finished.'
 notification
