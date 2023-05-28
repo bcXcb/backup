@@ -94,7 +94,7 @@ function toggle_flash_drive_mount {
 
 function check_dependences {
     # check if necessary programs are available
-    local programs=(zip e4defrag fuser mountpoint aplay)
+    local programs=(zip fuser mountpoint aplay)
     local COMMAND_NOT_FOUND=127
     local flag='False'
 
@@ -105,10 +105,19 @@ function check_dependences {
         # "> /dev/null 2>&1": redirect the standard output and standard error output to the null device
         command -v $program > /dev/null 2>&1
         if [ $? -ne 0 ]; then
-            echo "Error: the program \"$program\" is not available."
+            echo "Error: is necessary the program \"$program\"."
             flag='True'
         fi
     done
+
+	# checks if programs for defragmentation exist
+	command -v fsck.fat > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		command -v dosfsck > /dev/null 2>&1
+		if [ $? -ne 0 ]; then
+			echo 'Error: is necessary the program fsck.fat or dosfsck.'
+		fi
+	fi
 
     if [ $flag = 'True' ]; then
         exit 1
@@ -141,37 +150,69 @@ function check_dependences {
 }
 
 function backup {
-    local i=0
     local items=
-    local non_empty_items_total=0
-    local empty_items_total=0
     local file_name='items-for-backup.txt' # text file containing path of directories and files to backup
     local ITEMS_LIST=/home/gabriel/arquivos/github/flashcopy/$file_name
+    local i=0
+    local non_exist=0
+    local empty_dirs=0
+    local empty_files=0
+    local non_empty_dirs=0
+    local non_empty_files=0
 
 	for item in `cat $ITEMS_LIST`; do
-		if [ -e $item ]; then
-            		if [ -d $item -a `ls $item | wc -l` -gt 0 ]; then
-	                	items[$((i++))]=$item
-			fi
-
-	            	if [ -f $item -a -s $item ]; then
-        	        	items[$((i++))]=$item
-			fi
-			((non_empty_items_total++))
-		else
-			((empty_items_total++))
-        	fi
-	done
-
-	echo 'd - directory, f - file.'
-    echo 'The following items were copied:'
-    for item in ${items[*]}; do
-        cp -r --no-preserve=ownership $item $TEMP_DIR_PATH
-        [[ -d $item ]] && echo "(d) $item." || echo "(f) $item."
+        if [ -e $item ]; then
+            if [ -d $item ]; then
+                if [ `ls $item | wc -l` -gt 0 ]; then
+                    items[((i++))]=$item
+                    ((non_empty_dirs++))
+                else
+                    ((empty_dirs++))
+                fi
+            else
+                if [ -s $item ]; then
+                    items[((i++))]=$item
+                    ((non_empty_files++))
+                else
+                    ((empty_files++))
+                fi
+            fi
+        else
+            ((non_exist++))
+        fi
     done
 
-    echo "$non_empty_items_total directories and files were copied."
-    echo "$empty_items_total empty or nonexistent directories and files were ignored."
+    echo 'Copying...'
+	echo 'd - directory, f - file.'
+    for item in ${items[*]}; do
+        if [ -d $item ]; then
+            cp -r --no-preserve=ownership $item $TEMP_DIR_PATH
+            echo "(d) $item."
+        else
+            cp --no-preserve=ownership $item $TEMP_DIR_PATH
+            echo "(f) $item."
+        fi
+    done
+
+    if [ $non_exist -gt 0 ]; then
+        echo "$non_exist missing items."
+    fi
+
+    if [ $empty_files -gt 0 ]; then
+        echo "$empty_files empty files."
+    fi
+
+    if [ $empty_dirs -gt 0 ]; then
+        echo "$empty_dirs empty directories."
+    fi
+
+    if [ $non_empty_files -gt 0 ]; then
+        echo "$non_empty_files files copied."
+    fi
+
+    if [ $non_empty_dirs -gt 0 ]; then
+        echo "$non_empty_dirs directories copied."
+    fi
 }
 
 # compression with exclusion
@@ -190,12 +231,28 @@ function compression_with_exclusion {
     rm -r $TEMP_DIR_PATH && echo ' [ Success].' || echo ' [Failure].'
 }
 
-# note: normally, flash memory devices are formatted with fat32 or exFAT file
-# systems, therefore, specific tools must be used to defragment these file
-# systems. "e4defrag" is a tool for ext4 file system defragmentation.
 function defragment {
     echo -n 'Defragmenting compressed file...'
-    e4defrag -v $BACKUP_FILE_PATH > /dev/null 2>&1 && echo ' [Success].' || echo ' [Failure].'
+
+    command -v fsck.fat > /dev/null 2>&1
+    if [ $? -eq 0 ]; then
+		fsck.fat -atvw $BACKUP_FILE_PATH > /dev/null 2>&1
+		if [ $? -eq 2 ]; then
+			echo ' [Failure].'
+		else
+			echo ' [Success].'
+		fi
+	else
+	    command -v dosfsck > /dev/null 2>&1
+    	if [ $? -eq 0 ]; then
+			dosfsck -atvw $BACKUP_FILE_PATH > /dev/null 2>&1
+			if [ $? -eq 2 ]; then
+				echo ' [Failure].'
+			else
+				echo ' [Success].'
+			fi
+		fi
+    fi
 }
 
 function notification {
@@ -224,7 +281,7 @@ toggle_flash_drive_mount --mount
 check_dependences
 backup
 compression_with_exclusion
-#defragment
+defragment
 toggle_flash_drive_mount --dismount
 echo 'Backup finished.'
 notification
