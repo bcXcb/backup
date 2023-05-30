@@ -1,0 +1,3 @@
+flashcopy v1.0
+license: none - pubic domain
+Written by: Gabriel C. de J. Oliveira

@@ -1,0 +1,17 @@
+NAME
+	flashcopy - create backup of files and directories in flash drives
+
+SYNOPSIS
+	flashcopy [OPTION]
+	flashcopy [OPTION] [DEVICE]
+
+DESCRIPTION
+	-d, --device
+		select the device on which the backup will be performed
+	-h, --help
+		display this help and exit
+	-v, --version
+		output version information and exit
+
+AUTHOR
+	Written by Gabriel Cavalcante de Jesus Oliveira.
