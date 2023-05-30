@@ -189,7 +189,7 @@ function compression_with_exclusion {
 }
 
 function notification {
-	local file_name='notification.wav'
+	local file_name='backup-finished.wav'
 	local sound_path=/home/gabriel/arquivos/projetos/github/flashcopy/sound/$file_name
 	local sound_device_path=/dev/snd/pcmC0D0p # default sound output device
 
