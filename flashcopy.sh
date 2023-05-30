@@ -11,52 +11,36 @@ declare TEMP_DIR_PATH=$BACKUP_DIR_PATH/$TEMP_DIR_NAME
 declare BACKUP_FILE_NAME=`date +"%A"`.zip
 declare BACKUP_FILE_PATH=$BACKUP_DIR_PATH/$BACKUP_FILE_NAME
 
-function help {
-	echo 'NAME'
-	echo -e '\tflashcopy - create backup of files and directories in flash drives'
-	echo ''
-	echo 'SYNOPSIS'
-	echo -e '\tflashcopy [OPTION]'
-   	echo -e '\tflashcopy [OPTION] [DEVICE]'
-	echo ''
-	echo 'DESCRIPTION'
-	echo -e '\t-d, --device'
-	echo -e '\t\tselect the device on which the backup will be performed'
-	echo -e '\t-h, --help'
-	echo -e '\t\tdisplay this help and exit'
-	echo -e '\t-v, --version'
-	echo -e '\t\toutput version information and exit'
-	echo ''
-	echo 'AUTHOR'
-	echo -e '\tWritten by Gabriel Cavalcante de Jesus Oliveira.'
+function show_help {
+	local FILE_PATH=/home/gabriel/arquivos/projetos/github/flashcopy/txt/help.txt
+    cat $FILE_PATH
 }
 
-function version {
-    echo 'flashcopy v1.0'
-    echo 'license: none - pubic domain'
-    echo 'Written by: Gabriel C. de J. Oliveira'
+function show_version {
+    local FILE_PATH=/home/gabriel/arquivos/projetos/github/flashcopy/txt/version.txt
+    cat $FILE_PATH
 }
 
 function parameters {
     case $1 in
         '')
-            help
+            show_help
             exit 1;;
         '-h' | '--help')
-            help
+            show_help
             exit 0;;
         '-v' | '--version')
-            version
+            show_version
             exit 0;;
         '-d' | '--device')
             if [ -n "$2" -a -e $2 ]; then
                 flash_drive_path=$2
             else
-                help
+                show_help
                 exit 1
             fi;;
         *)
-            help
+            show_help
             exit 1
     esac
 }
@@ -67,7 +51,6 @@ function device_is_busy {
     [[ $? -eq 0 ]] && echo 'True' || echo 'False'
 }
 
-# review this implementation
 function toggle_flash_drive_mount {
 	local action=$1
 
@@ -98,8 +81,7 @@ function check_dependences {
     local COMMAND_NOT_FOUND=127
     local flag='False'
 
-    echo -n 'Checking dependences...'
-    echo ''
+    echo 'Checking dependences...'
 
     for program in ${programs[*]}; do
         # "> /dev/null 2>&1": redirect the standard output and standard error output to the null device
@@ -109,15 +91,6 @@ function check_dependences {
             flag='True'
         fi
     done
-
-	# checks if programs for defragmentation exist
-	command -v fsck.fat > /dev/null 2>&1
-	if [ $? -ne 0 ]; then
-		command -v dosfsck > /dev/null 2>&1
-		if [ $? -ne 0 ]; then
-			echo 'Error: is necessary the program fsck.fat or dosfsck.'
-		fi
-	fi
 
     if [ $flag = 'True' ]; then
         exit 1
@@ -150,28 +123,34 @@ function check_dependences {
 }
 
 function backup {
-    local items=
-    local file_name='items-for-backup.txt' # text file containing path of directories and files to backup
-    local ITEMS_LIST=/home/gabriel/arquivos/github/flashcopy/$file_name
     local i=0
     local non_exist=0
     local empty_dirs=0
     local empty_files=0
     local non_empty_dirs=0
     local non_empty_files=0
+    local file_name='items-for-backup.txt'
+    local ITEMS_LIST=/home/gabriel/arquivos/projetos/github/flashcopy/txt/$file_name
+    local bar=()
+    local foo=()
+
+    echo 'Copying...'
+	echo 'd - directory, f - file.'
 
 	for item in `cat $ITEMS_LIST`; do
         if [ -e $item ]; then
             if [ -d $item ]; then
                 if [ `ls $item | wc -l` -gt 0 ]; then
-                    items[((i++))]=$item
+                    cp -r --no-preserve=ownership $item $TEMP_DIR_PATH
+                    echo "(d) $item."
                     ((non_empty_dirs++))
                 else
                     ((empty_dirs++))
                 fi
             else
                 if [ -s $item ]; then
-                    items[((i++))]=$item
+                    cp --no-preserve=ownership $item $TEMP_DIR_PATH
+                    echo "(f) $item."
                     ((non_empty_files++))
                 else
                     ((empty_files++))
@@ -182,37 +161,15 @@ function backup {
         fi
     done
 
-    echo 'Copying...'
-	echo 'd - directory, f - file.'
-    for item in ${items[*]}; do
-        if [ -d $item ]; then
-            cp -r --no-preserve=ownership $item $TEMP_DIR_PATH
-            echo "(d) $item."
-        else
-            cp --no-preserve=ownership $item $TEMP_DIR_PATH
-            echo "(f) $item."
+    foo=($non_exist $empty_files $empty_dirs $non_empty_files $non_empty_dirs)
+    bar=('missing items' 'empty files' 'empty directories' 'files copied' 'directories copied')
+
+    for foobar in ${foo[*]}; do
+        if [ $foobar -gt 0 ]; then
+            echo "$foobar ${bar[$i]}."
         fi
+        ((i++))
     done
-
-    if [ $non_exist -gt 0 ]; then
-        echo "$non_exist missing items."
-    fi
-
-    if [ $empty_files -gt 0 ]; then
-        echo "$empty_files empty files."
-    fi
-
-    if [ $empty_dirs -gt 0 ]; then
-        echo "$empty_dirs empty directories."
-    fi
-
-    if [ $non_empty_files -gt 0 ]; then
-        echo "$non_empty_files files copied."
-    fi
-
-    if [ $non_empty_dirs -gt 0 ]; then
-        echo "$non_empty_dirs directories copied."
-    fi
 }
 
 # compression with exclusion
@@ -224,40 +181,16 @@ function compression_with_exclusion {
     # zip -9: maximum level of compression
     # zip -0: no compression, only store
     echo -n 'Compressing items...'
-    zip -rq9 $BACKUP_FILE_PATH $TEMP_DIR_PATH 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+    zip -rq0 $BACKUP_FILE_PATH $TEMP_DIR_PATH 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 
     # remove the temporary directory
     echo -n 'Removing the temporary directory...'
     rm -r $TEMP_DIR_PATH && echo ' [ Success].' || echo ' [Failure].'
 }
 
-function defragment {
-    echo -n 'Defragmenting compressed file...'
-
-    command -v fsck.fat > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
-		fsck.fat -atvw $BACKUP_FILE_PATH > /dev/null 2>&1
-		if [ $? -eq 2 ]; then
-			echo ' [Failure].'
-		else
-			echo ' [Success].'
-		fi
-	else
-	    command -v dosfsck > /dev/null 2>&1
-    	if [ $? -eq 0 ]; then
-			dosfsck -atvw $BACKUP_FILE_PATH > /dev/null 2>&1
-			if [ $? -eq 2 ]; then
-				echo ' [Failure].'
-			else
-				echo ' [Success].'
-			fi
-		fi
-    fi
-}
-
 function notification {
 	local file_name='notification.wav'
-	local sound_path=/home/gabriel/arquivos/github/flashcopy/$file_name
+	local sound_path=/home/gabriel/arquivos/projetos/github/flashcopy/$file_name
 	local sound_device_path=/dev/snd/pcmC0D0p # default sound output device
 
     # verify if any process is using the device, returning "True" at positive case
@@ -281,7 +214,6 @@ toggle_flash_drive_mount --mount
 check_dependences
 backup
 compression_with_exclusion
-defragment
 toggle_flash_drive_mount --dismount
 echo 'Backup finished.'
 notification
