@@ -11,6 +11,21 @@ declare TEMP_DIR_PATH=$BACKUP_DIR_PATH/$TEMP_DIR_NAME
 declare BACKUP_FILE_NAME=`date +"%A"`.zip
 declare BACKUP_FILE_PATH=$BACKUP_DIR_PATH/$BACKUP_FILE_NAME
 
+function set_font_color {
+	color=$1
+	case $color in
+		'default') echo -en '\e[0m';;
+		'gray')    echo -en '\e[30;1m';;
+		'red')     echo -en '\e[31;1m';;
+		'green')   echo -en '\e[32;1m';;
+		'yellow')  echo -en '\e[33;1m';;
+		'blue')    echo -en '\e[34;1m';;
+		'magenta') echo -en '\e[35;1m';;
+		'cyan')    echo -en '\e[36;1m';;
+		'white')   echo -en '\e[37;1m'
+	esac
+}
+
 function show_help {
 	local FILE_PATH=/home/gabriel/arquivos/projetos/github/flashcopy/txt/help.txt
     cat $FILE_PATH
@@ -54,6 +69,7 @@ function device_is_busy {
 function toggle_flash_drive_mount {
 	local action=$1
 
+    set_font_color 'magenta'
 	if [ $action = '--mount' ]; then
     	mountpoint -q $MOUNT_POINT_PATH
 
@@ -73,6 +89,7 @@ function toggle_flash_drive_mount {
     	    umount $flash_drive_path 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 	    fi
 	fi
+    set_font_color 'default'
 }
 
 function check_dependences {
@@ -81,6 +98,7 @@ function check_dependences {
     local COMMAND_NOT_FOUND=127
     local flag='False'
 
+    set_font_color 'magenta'
     echo 'Checking dependences...'
 
     for program in ${programs[*]}; do
@@ -120,6 +138,7 @@ function check_dependences {
         echo "Error: unable to create temporary directory \"$TEMP_DIR_PATH\"."
         exit 1
     fi
+    set_font_color 'default'
 }
 
 function backup {
@@ -134,9 +153,11 @@ function backup {
     local bar=()
     local foo=()
 
+    set_font_color 'magenta'
     echo 'Copying...'
 	echo 'd - directory, f - file.'
 
+    set_font_color 'blue'
 	for item in `cat $ITEMS_LIST`; do
         if [ -e $item ]; then
             if [ -d $item ]; then
@@ -164,12 +185,14 @@ function backup {
     foo=($non_exist $empty_files $empty_dirs $non_empty_files $non_empty_dirs)
     bar=('missing items' 'empty files' 'empty directories' 'files copied' 'directories copied')
 
+    set_font_color 'yellow'
     for foobar in ${foo[*]}; do
         if [ $foobar -gt 0 ]; then
             echo "$foobar ${bar[$i]}."
         fi
         ((i++))
     done
+    set_font_color 'default'
 }
 
 # compression with exclusion
@@ -177,6 +200,8 @@ function compression_with_exclusion {
     if [ -e $BACKUP_FILE_PATH ]; then
         rm -rf $BACKUP_FILE_PATH
     fi
+
+    set_font_color 'magenta'
 
     # zip -9: maximum level of compression
     # zip -0: no compression, only store
@@ -186,6 +211,8 @@ function compression_with_exclusion {
     # remove the temporary directory
     echo -n 'Removing the temporary directory...'
     rm -r $TEMP_DIR_PATH && echo ' [ Success].' || echo ' [Failure].'
+
+    set_font_color 'default'
 }
 
 function notification {
@@ -200,6 +227,7 @@ function notification {
 }
 
 parameters $*
+set_font_color 'magenta'
 # checks if the pendrive is busy, waiting for it to be idle
 if [ `device_is_busy $flash_drive_path` = 'True' ]; then
     echo 'The flash drive is busy.'
@@ -215,5 +243,7 @@ check_dependences
 backup
 compression_with_exclusion
 toggle_flash_drive_mount --dismount
+set_font_color 'magenta'
 echo 'Backup finished.'
+set_font_color 'default'
 notification
