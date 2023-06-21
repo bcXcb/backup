@@ -1,9 +1,7 @@
 /home/gabriel/arquivos/textos
-/home/gabriel/arquivos/estudos
 /home/gabriel/arquivos/projetos
 /home/gabriel/arquivos/temporario
 /home/gabriel/Documentos
-/home/gabriel/Downloads
 /home/gabriel/Imagens
 /home/gabriel/Modelos
 /home/gabriel/Música
@@ -13,7 +11,6 @@
 /home/gabriel/.gitconfig
 /home/gabriel/.config/kwriterc
 /home/gabriel/.config/katerc
-/home/gabriel/.config/Code
 /home/gabriel/.config/flare
 /home/gabriel/.local/share/flare
 /home/gabriel/pt

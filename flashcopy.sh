@@ -206,7 +206,7 @@ function compression_with_exclusion {
     # zip -9: maximum level of compression
     # zip -0: no compression, only store
     echo -n 'Compressing items...'
-    zip -rq0 $BACKUP_FILE_PATH $TEMP_DIR_PATH 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+    zip -rq9 $BACKUP_FILE_PATH $TEMP_DIR_PATH 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
 
     # remove the temporary directory
     echo -n 'Removing the temporary directory...'
