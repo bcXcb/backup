@@ -12,6 +12,5 @@ Obs.: As regras acima não se aplicam a diretórios ou arquivos nativos, pois el
 
 ## Saídas do script
 
-![output](https://github.com/bcXcb/flashcopy/assets/94535032/1b0f0379-75fc-493e-ba75-c9c49d3c3994)
-
-![result](https://github.com/bcXcb/flashcopy/assets/94535032/d980f390-7907-4e68-8ae5-636fc3f93857)
+<img src="https://github.com/zolppy/flashcopy/blob/main/images/output-01.png" alt="Demonstração de saída do script" />
+<img src="https://github.com/zolppy/flashcopy/blob/main/images/output-02.png" alt="Demonstração de saída do script" />
