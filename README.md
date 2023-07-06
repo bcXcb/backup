@@ -1,4 +1,4 @@
-# flashcopy
+# Flashcopy
 
 ## Boas práticas para nomeação de diretórios e arquivos
 
