@@ -3,6 +3,7 @@
 # Backup of directories and files in flash drives
 # The script works fine in Debian Linux
 
+# main constants
 declare flash_drive_path=
 declare MOUNT_POINT_PATH=/media/gabriel
 declare BACKUP_DIR_PATH=$MOUNT_POINT_PATH/backup
@@ -10,6 +11,13 @@ declare TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255
 declare TEMP_DIR_PATH=$BACKUP_DIR_PATH/$TEMP_DIR_NAME
 declare BACKUP_FILE_NAME=`date +"%A"`.zip
 declare BACKUP_FILE_PATH=$BACKUP_DIR_PATH/$BACKUP_FILE_NAME
+# constants for colors
+declare MAIN_COLOR='blue'
+declare ITEM_LIST_COLOR='green'
+declare COPIED_ITEM_INFORMATION_COLOR='red'
+# others constants
+declare SUCCESS_MESSAGE='[OK].'
+declare FAILURE_MESSAGE='[ERROR].'
 
 function set_font_color {
 	color=$1
@@ -69,7 +77,7 @@ function device_is_busy {
 function toggle_flash_drive_mount {
 	local action=$1
 
-    set_font_color 'magenta'
+    set_font_color $MAIN_COLOR
 	if [ $action = '--mount' ]; then
     	mountpoint -q $MOUNT_POINT_PATH
 
@@ -77,7 +85,7 @@ function toggle_flash_drive_mount {
     	    echo 'The flash drive already mounted.'
 	    else
         	echo -n 'Mounting flash drive...'
-    	    mount $flash_drive_path $MOUNT_POINT_PATH 2> /dev/null && echo ' [Success].' || echo ' [ Failure].'
+    	    mount $flash_drive_path $MOUNT_POINT_PATH 2> /dev/null && echo $SUCCESS_MESSAGE || echo $FAILURE_MESSAGE
 	    fi
 	else
     	mountpoint -q $MOUNT_POINT_PATH
@@ -86,7 +94,7 @@ function toggle_flash_drive_mount {
     	    echo 'The flash drive already dismounted.'
 	    else
         	echo -n 'Dismounting flash drive...'
-    	    umount $flash_drive_path 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+    	    umount $flash_drive_path 2> /dev/null && echo $SUCCESS_MESSAGE || echo $FAILURE_MESSAGE
 	    fi
 	fi
     set_font_color 'default'
@@ -98,7 +106,7 @@ function check_dependences {
     local COMMAND_NOT_FOUND=127
     local flag='False'
 
-    set_font_color 'magenta'
+    set_font_color $MAIN_COLOR
     echo 'Checking dependences...'
 
     for program in ${programs[*]}; do
@@ -150,14 +158,14 @@ function backup {
     local non_empty_files=0
     local file_name='items-for-backup.txt'
     local ITEMS_LIST=/home/gabriel/arquivos/projetos/github/flashcopy/txt/$file_name
-    local bar=()
-    local foo=()
+    local item_labels=()
+    local item_counts=()
 
-    set_font_color 'magenta'
+    set_font_color $MAIN_COLOR
     echo 'Copying...'
 	echo 'd - directory, f - file.'
 
-    set_font_color 'blue'
+    set_font_color $ITEM_LIST_COLOR
 	for item in `cat $ITEMS_LIST`; do
         if [ -e $item ]; then
             if [ -d $item ]; then
@@ -182,13 +190,13 @@ function backup {
         fi
     done
 
-    foo=($non_exist $empty_files $empty_dirs $non_empty_files $non_empty_dirs)
-    bar=('missing items' 'empty files' 'empty directories' 'files copied' 'directories copied')
+    item_counts=($non_exist $empty_files $empty_dirs $non_empty_files $non_empty_dirs)
+    item_labels=('missing items' 'empty files' 'empty directories' 'files copied' 'directories copied')
 
-    set_font_color 'yellow'
-    for foobar in ${foo[*]}; do
-        if [ $foobar -gt 0 ]; then
-            echo "$foobar ${bar[$i]}."
+    set_font_color $COPIED_ITEM_INFORMATION_COLOR
+    for item in ${item_counts[*]}; do
+        if [ $item -gt 0 ]; then
+            echo "$item ${item_labels[$i]}."
         fi
         ((i++))
     done
@@ -201,16 +209,16 @@ function compression_with_exclusion {
         rm -rf $BACKUP_FILE_PATH
     fi
 
-    set_font_color 'magenta'
+    set_font_color $MAIN_COLOR
 
     # zip -9: maximum level of compression
     # zip -0: no compression, only store
     echo -n 'Compressing items...'
-    zip -rq9 $BACKUP_FILE_PATH $TEMP_DIR_PATH 2> /dev/null && echo ' [Success].' || echo ' [Failure].'
+    zip -rq9 $BACKUP_FILE_PATH $TEMP_DIR_PATH 2> /dev/null && echo $SUCCESS_MESSAGE || echo $FAILURE_MESSAGE
 
     # remove the temporary directory
     echo -n 'Removing the temporary directory...'
-    rm -r $TEMP_DIR_PATH && echo ' [ Success].' || echo ' [Failure].'
+    rm -r $TEMP_DIR_PATH && echo $SUCCESS_MESSAGE || echo $FAILURE_MESSAGE
 
     set_font_color 'default'
 }
@@ -227,7 +235,7 @@ function notification {
 }
 
 parameters $*
-set_font_color 'magenta'
+set_font_color $MAIN_COLOR
 # checks if the pendrive is busy, waiting for it to be idle
 if [ `device_is_busy $flash_drive_path` = 'True' ]; then
     echo 'The flash drive is busy.'
@@ -243,7 +251,7 @@ check_dependences
 backup
 compression_with_exclusion
 toggle_flash_drive_mount --dismount
-set_font_color 'magenta'
+set_font_color $MAIN_COLOR
 echo 'Backup finished.'
 set_font_color 'default'
 notification
