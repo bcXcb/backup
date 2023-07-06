@@ -11,6 +11,7 @@ declare TEMP_DIR_NAME=$((RANDOM % 256)) # 0 to 255
 declare TEMP_DIR_PATH=$BACKUP_DIR_PATH/$TEMP_DIR_NAME
 declare BACKUP_FILE_NAME=`date +"%A"`.zip
 declare BACKUP_FILE_PATH=$BACKUP_DIR_PATH/$BACKUP_FILE_NAME
+declare DATA_DIR=/home/gabriel/arquivos/projetos/github/flashcopy/data
 # constants for colors
 declare MAIN_COLOR='blue'
 declare ITEM_LIST_COLOR='green'
@@ -35,12 +36,12 @@ function set_font_color {
 }
 
 function show_help {
-	local FILE_PATH=/home/gabriel/arquivos/projetos/github/flashcopy/txt/help.txt
+	local FILE_PATH=$DATA_DIR/help.txt
     cat $FILE_PATH
 }
 
 function show_version {
-    local FILE_PATH=/home/gabriel/arquivos/projetos/github/flashcopy/txt/version.txt
+    local FILE_PATH=$DATA_DIR/version.txt
     cat $FILE_PATH
 }
 
@@ -157,7 +158,7 @@ function backup {
     local non_empty_dirs=0
     local non_empty_files=0
     local file_name='items-for-backup.txt'
-    local ITEMS_LIST=/home/gabriel/arquivos/projetos/github/flashcopy/txt/$file_name
+    local ITEMS_LIST=$DATA_DIR/$file_name
     local item_labels=()
     local item_counts=()
 
@@ -225,7 +226,7 @@ function compression_with_exclusion {
 
 function notification {
 	local file_name='backup-finished.wav'
-	local sound_path=/home/gabriel/arquivos/projetos/github/flashcopy/sound/$file_name
+	local sound_path=$DATA_DIR/$file_name
 	local sound_device_path=/dev/snd/pcmC0D0p # default sound output device
 
     # verify if any process is using the device, returning "True" at positive case
